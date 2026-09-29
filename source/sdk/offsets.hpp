@@ -201,14 +201,21 @@ inline void FillFromJson(const json& data) {
     CLS::FIELD = v; \
     if (v == 0) { missing++; logger::print<logger::level::warn>("offset missing: %s::%s", #CLS, #FIELD); } \
 } while (0)
+#define SET2(CLS, FIELD, ALT_CLS, ALT_FIELD) do { \
+    uintptr_t v = Lookup(off, #CLS, #FIELD); \
+    if (v == 0) v = Lookup(off, #ALT_CLS, #ALT_FIELD); \
+    CLS::FIELD = v; \
+    if (v == 0) { missing++; logger::print<logger::level::warn>("offset missing: %s::%s (alt %s::%s)", #CLS, #FIELD, #ALT_CLS, #ALT_FIELD); } \
+} while (0)
 
-    SET(BasePart, AssemblyAngularVelocity);
-    SET(BasePart, AssemblyLinearVelocity);
+    // imtheo moved part motion fields under Primitive — try BasePart first, fall back to Primitive.
+    SET2(BasePart, AssemblyAngularVelocity, Primitive, AssemblyAngularVelocity);
+    SET2(BasePart, AssemblyLinearVelocity, Primitive, AssemblyLinearVelocity);
     SET(BasePart, Color3);
-    SET(BasePart, Position);
+    SET2(BasePart, Position, Primitive, Position);
     SET(BasePart, Primitive);
-    SET(BasePart, Rotation);
-    SET(BasePart, Size);
+    SET2(BasePart, Rotation, Primitive, Rotation);
+    SET2(BasePart, Size, Primitive, Size);
     SET(BasePart, Transparency);
     SET(Camera, CameraSubject);
     SET(Camera, Position);
@@ -257,12 +264,16 @@ inline void FillFromJson(const json& data) {
     SET(TaskScheduler, JobEnd);
     SET(TaskScheduler, JobName);
     SET(TaskScheduler, JobStart);
-    SET(TaskScheduler, MaxFPS);
+    // imtheo 2.2.4 dropped TaskScheduler::MaxFPS — keep last known RVA so FPS unlock keeps working.
+    TaskScheduler::MaxFPS = Lookup(off, "TaskScheduler", "MaxFPS");
+    if (TaskScheduler::MaxFPS == 0) TaskScheduler::MaxFPS = 0xB0;
     SET(TaskScheduler, Pointer);
     SET(VisualEngine, Dimensions);
     SET(VisualEngine, Pointer);
     SET(VisualEngine, ViewMatrix);
-    SET(Workspace, ForceNewAFKDuration);
+    // imtheo has no ForceNewAFKDuration — keep last known RVA (anti-afk write).
+    Workspace::ForceNewAFKDuration = Lookup(off, "Workspace", "ForceNewAFKDuration");
+    if (Workspace::ForceNewAFKDuration == 0) Workspace::ForceNewAFKDuration = 0x1F8;
     SET(Workspace, ReadOnlyGravity);
     // silent aim mouse offsets live under different keys depending on dumper version;
     // try canonical names first, then common alternates.
@@ -273,6 +284,7 @@ inline void FillFromJson(const json& data) {
     if (silent::FramePositionY == 0) silent::FramePositionY = Lookup(off, "MouseService", "FramePositionY");
     if (silent::FramePositionY == 0) silent::FramePositionY = 0x4D8;
 #undef SET
+#undef SET2
     if (missing > 0)
         logger::print<logger::level::warn>("%d offsets missing from imtheo payload (left as 0, check names)", missing);
 }
