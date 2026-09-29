@@ -1,0 +1,12 @@
+build/
+.vs/
+x64/
+Debug/
+Release/
+*.user
+*.aps
+*.ncb
+*.opendb
+*.sdf
+offsets.version
+offsets.json

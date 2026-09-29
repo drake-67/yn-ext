@@ -1,0 +1,36 @@
+name: Build EXE (Release x64)
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: microsoft/setup-msbuild@v2
+
+      - name: Show structure
+        run: dir /s
+        shell: cmd
+
+      # NOTE: this base currently has hardcoded dev include paths (C:\Users\moonp\...)
+      # and legacy deps (DirectX SDK June 2010 D3DX11, freetype.lib, library_x64.lib KeyAuth stub).
+      # This workflow attempts a best-effort build of Release|x64.
+      # If it fails on missing SDK, check logs -> we will fix vcxproj to be CI-friendly next.
+      - name: Build Release x64
+        run: msbuild Project1.sln /p:Configuration=Release /p:Platform=x64 /m /v:minimal
+        shell: cmd
+
+      - name: Upload EXE
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: yn-ext-build
+          path: |
+            build/project/**/*.exe
+            **/Release/**/*.exe
+            **/x64/**/*.exe

@@ -1,0 +1,354 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{78c64720-9e3a-4d9c-a994-3409ecdb9b73}</ProjectGuid>
+    <RootNamespace>Project1</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.props" />
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>..\build\project</OutDir>
+    <IntDir>..\build\intermediate</IntDir>
+    <IncludePath>C:\Users\moonp\Downloads\SDK\Include;C:\Users\moonp\Downloads\SDK\Freetype\Include;C:\Users\moonp\Downloads\cursed.wtf\source\utils\clipper2lib\include;C:\Users\moonp\Downloads\curl-8.16.0\curl-8.16.0\include\curl;C:\Users\moonp\Downloads\lua-5.4.2_Win64_dll17_lib;C:\Users\moonp\Downloads\rapidjson-master\rapidjson-master\include;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;utils\clipper2lib\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Users\moonp\Downloads\SDK\Lib\x64;C:\Users\moonp\Downloads\SDK\Freetype\Win64;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x64;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>freetype.lib;d3dx11.lib;library_x64.lib;lua54.lib;libcurl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="cheat\drawing\drawing.hpp" />
+    <ClInclude Include="cheat\drawing\fonts\arial.h" />
+    <ClInclude Include="cheat\drawing\fonts\verdane.h" />
+    <ClInclude Include="cheat\drawing\images\esp_preview.h" />
+    <ClInclude Include="cheat\drawing\images\iconsdex.h" />
+    <ClInclude Include="cheat\drawing\images\image.h" />
+    <ClInclude Include="cheat\drawing\images\image_hex.h" />
+    <ClInclude Include="cheat\drawing\imgui\addons\addons.hpp" />
+    <ClInclude Include="cheat\drawing\imgui\addons\imgui_addons.h" />
+    <ClInclude Include="cheat\drawing\imgui\backends\imgui_impl_dx11.h" />
+    <ClInclude Include="cheat\drawing\imgui\backends\imgui_impl_win32.h" />
+    <ClInclude Include="cheat\drawing\imgui\backends\TextEditor.h" />
+    <ClInclude Include="cheat\drawing\imgui\custom_widgets\cfg.h" />
+    <ClInclude Include="cheat\drawing\imgui\custom_widgets\imgui_tricks.hpp" />
+    <ClInclude Include="cheat\drawing\imgui\custom_widgets\menu_elements.h" />
+    <ClInclude Include="cheat\drawing\imgui\custom_widgets\options.hpp" />
+    <ClInclude Include="cheat\drawing\imgui\custom_widgets\stb_image.h" />
+    <ClInclude Include="cheat\drawing\imgui\data\fonts.h" />
+    <ClInclude Include="cheat\drawing\imgui\data\images.h" />
+    <ClInclude Include="cheat\drawing\imgui\freetype\imgui_freetype.h" />
+    <ClInclude Include="cheat\drawing\imgui\imconfig.h" />
+    <ClInclude Include="cheat\drawing\imgui\imgui.h" />
+    <ClInclude Include="cheat\drawing\imgui\imgui_internal.h" />
+    <ClInclude Include="cheat\drawing\imgui\imgui_offset_rect.h" />
+    <ClInclude Include="cheat\drawing\imgui\imgui_settings.h" />
+    <ClInclude Include="cheat\drawing\imgui\imstb_rectpack.h" />
+    <ClInclude Include="cheat\drawing\imgui\imstb_textedit.h" />
+    <ClInclude Include="cheat\drawing\imgui\imstb_truetype.h" />
+    <ClInclude Include="cheat\drawing\imgui\settings\colors.h" />
+    <ClInclude Include="cheat\drawing\imgui\settings\elements.h" />
+    <ClInclude Include="cheat\drawing\imgui\settings\functions.h" />
+    <ClInclude Include="cheat\drawing\imgui\settings\variables.h" />
+    <ClInclude Include="cheat\drawing\imgui\stbi_image.h" />
+    <ClInclude Include="cheat\drawing\lua\luau.hpp" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lapi.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lauxlib.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lcode.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lctype.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\ldebug.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\ldo.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lfunc.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lgc.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\ljumptab.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\llex.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\llimits.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lmem.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lobject.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lopcodes.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lopnames.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lparser.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lprefix.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lstate.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lstring.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\ltable.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\ltm.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lua.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lua.hpp" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\luaconf.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lualib.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lundump.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lvm.h" />
+    <ClInclude Include="cheat\drawing\lua\lua_files\lzio.h" />
+    <ClInclude Include="cheat\features\aimbot\aimbot.hpp" />
+    <ClInclude Include="cheat\features\cache\cache.hpp" />
+    <ClInclude Include="cheat\features\features.hpp" />
+    <ClInclude Include="cheat\features\rage\rage.hpp" />
+    <ClInclude Include="cheat\features\silentaim\silentaim.hpp" />
+    <ClInclude Include="cheat\features\visuals\renderer\renderer.hpp" />
+    <ClInclude Include="cheat\features\visuals\visuals.hpp" />
+    <ClInclude Include="cheat\features\wallcheck\AABB.h" />
+    <ClInclude Include="cheat\features\wallcheck\wallcheck.hpp" />
+    <ClInclude Include="cheat\initialise.hpp" />
+    <ClInclude Include="cheat\menu\menu.hpp" />
+    <ClInclude Include="cheat\overlay\overlay.hpp" />
+    <ClInclude Include="globals\globals.h" />
+    <ClInclude Include="sdk\datamodel\camera.hpp" />
+    <ClInclude Include="sdk\datamodel\datamodel.hpp" />
+    <ClInclude Include="sdk\datamodel\humanoid.hpp" />
+    <ClInclude Include="sdk\datamodel\players.hpp" />
+    <ClInclude Include="sdk\datamodel\instance_t.hpp" />
+    <ClInclude Include="sdk\datamodel\part_t.hpp" />
+    <ClInclude Include="sdk\environment\environment.hpp" />
+    <ClInclude Include="sdk\graphics\visualengine.hpp" />
+    <ClInclude Include="sdk\graphics\renderview.hpp" />
+    <ClInclude Include="sdk\offsets.hpp" />
+    <ClInclude Include="sdk\schedule\task_scheduler.hpp" />
+    <ClInclude Include="utils\ckeybind\ckeybind.h" />
+    <ClInclude Include="utils\ckey\keybind.hpp" />
+    <ClInclude Include="utils\clipper2lib\include\clipper2\clipper.core.h" />
+    <ClInclude Include="utils\clipper2lib\include\clipper2\clipper.engine.h" />
+    <ClInclude Include="utils\clipper2lib\include\clipper2\clipper.export.h" />
+    <ClInclude Include="utils\clipper2lib\include\clipper2\clipper.h" />
+    <ClInclude Include="utils\clipper2lib\include\clipper2\clipper.minkowski.h" />
+    <ClInclude Include="utils\clipper2lib\include\clipper2\clipper.offset.h" />
+    <ClInclude Include="utils\clipper2lib\include\clipper2\clipper.rectclip.h" />
+    <ClInclude Include="utils\clipper2lib\include\clipper2\clipper.version.h" />
+    <ClInclude Include="utils\curl\curl.h" />
+    <ClInclude Include="utils\curl\curlver.h" />
+    <ClInclude Include="utils\curl\easy.h" />
+    <ClInclude Include="utils\curl\header.h" />
+    <ClInclude Include="utils\curl\mprintf.h" />
+    <ClInclude Include="utils\curl\multi.h" />
+    <ClInclude Include="utils\curl\options.h" />
+    <ClInclude Include="utils\curl\stdcheaders.h" />
+    <ClInclude Include="utils\curl\system.h" />
+    <ClInclude Include="utils\curl\typecheck-gcc.h" />
+    <ClInclude Include="utils\curl\urlapi.h" />
+    <ClInclude Include="utils\curl\websockets.h" />
+    <ClInclude Include="utils\json\json.hpp" />
+    <ClInclude Include="utils\key\keybind.h" />
+    <ClInclude Include="utils\math\math.hpp" />
+    <ClInclude Include="utils\memory\memory.h" />
+    <ClInclude Include="utils\network\network.hpp" />
+    <ClInclude Include="utils\output\output.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="cheat\drawing\drawing.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\addons\addons.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\backends\imgui_impl_dx11.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\backends\TextEditor.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\elements\button.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\elements\checkbox.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\elements\child.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\elements\coloredit.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\elements\draw.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\elements\dropdown.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\elements\helpers.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\elements\keybind.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\elements\section.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\elements\slider.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\elements\table.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\elements\textfield.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\elements\window.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\freetype\imgui_freetype.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\imgui.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\imgui_draw.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\imgui_tables.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="cheat\drawing\lua\lua.cpp" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lapi.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lauxlib.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lbaselib.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lcode.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lcorolib.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lctype.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\ldblib.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\ldebug.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\ldo.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\ldump.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lfunc.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lgc.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\linit.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\liolib.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\llex.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lmathlib.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lmem.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\loadlib.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lobject.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lopcodes.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\loslib.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lparser.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lstate.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lstring.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lstrlib.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\ltable.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\ltablib.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\ltm.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lundump.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lutf8lib.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lvm.c" />
+    <ClCompile Include="cheat\drawing\lua\lua_files\lzio.c" />
+    <ClCompile Include="cheat\features\aimbot\aimbot.cpp" />
+    <ClCompile Include="cheat\features\cache\cache.cpp" />
+    <ClCompile Include="cheat\features\features.cpp" />
+    <ClCompile Include="cheat\features\rage\rage.cpp" />
+    <ClCompile Include="cheat\features\silentaim\silentaim.cpp" />
+    <ClCompile Include="cheat\features\visuals\visuals.cpp" />
+    <ClCompile Include="cheat\features\wallcheck\wallcheck.cpp" />
+    <ClCompile Include="cheat\initialise.cpp" />
+    <ClCompile Include="cheat\menu\gui.cpp" />
+    <ClCompile Include="cheat\menu\menu.cpp" />
+    <ClCompile Include="cheat\overlay\overlay.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="sdk\datamodel\camera.cpp" />
+    <ClCompile Include="sdk\datamodel\datamodel.cpp" />
+    <ClCompile Include="sdk\datamodel\humanoid.cpp" />
+    <ClCompile Include="sdk\datamodel\players.cpp" />
+    <ClCompile Include="sdk\datamodel\instance_t.cpp" />
+    <ClCompile Include="sdk\datamodel\part_t.cpp" />
+    <ClCompile Include="sdk\environment\environment.cpp" />
+    <ClCompile Include="sdk\graphics\renderview.cpp" />
+    <ClCompile Include="sdk\graphics\visualengine.cpp" />
+    <ClCompile Include="sdk\schedule\task_scheduler.cpp" />
+    <ClCompile Include="utils\clipper2lib\src\clipper.engine.cpp" />
+    <ClCompile Include="utils\clipper2lib\src\clipper.offset.cpp" />
+    <ClCompile Include="utils\clipper2lib\src\clipper.rectclip.cpp" />
+    <ClCompile Include="utils\key\keybind.cpp" />
+    <ClCompile Include="utils\memory\memory.cpp" />
+    <ClCompile Include="utils\network\network.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <MASM Include="utils\memory\luck.asm">
+      <FileType>Document</FileType>
+    </MASM>
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="libcurl.lib" />
+    <Library Include="library_x64.lib" />
+    <Library Include="lua54.lib" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cheat\drawing\lua\lua_files\Makefile" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\masm.targets" />
+  </ImportGroup>
+</Project>
