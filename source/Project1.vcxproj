@@ -267,7 +267,7 @@
     <ClCompile Include="cheat\drawing\imgui\elements\table.cpp" />
     <ClCompile Include="cheat\drawing\imgui\elements\textfield.cpp" />
     <ClCompile Include="cheat\drawing\imgui\elements\window.cpp" />
-    <ClCompile Include="cheat\drawing\imgui\freetype\imgui_freetype.cpp"><ExcludedFromBuild Condition="$(Configuration)|$(Platform)=='Release|x64'">true</ExcludedFromBuild></ClCompile>
+    <ClCompile Include="cheat\drawing\imgui\freetype\imgui_freetype.cpp"><ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild></ClCompile>
     <ClCompile Include="cheat\drawing\imgui\imgui.cpp" />
     <ClCompile Include="cheat\drawing\imgui\imgui_draw.cpp" />
     <ClCompile Include="cheat\drawing\imgui\imgui_tables.cpp" />
