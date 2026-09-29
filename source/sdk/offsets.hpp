@@ -1,277 +1,318 @@
-
+#pragma once
+// yn-ext dynamic offsets — powered by https://offsets.imtheo.lol
+// No static offsets. Everything loads at runtime from offsets.json.
+//
+// Startup flow (call Offsets::Init() first in main, before initialise::setup):
+//   1. GET /roblox/version -> live version
+//   2. compare to offsets.version on disk
+//   3. if differ (or no cache), GET /offsets.json -> save offsets.json + offsets.version
+//   4. parse JSON, fill all Offsets::Class::Field vars below
+//
+// JSON shape: { "Roblox Version": "...", "Offsets": { "Humanoid": { "Health": 404, ... }, ... } }
+// Values are decimal. Missing keys stay 0 (logged, not fatal).
+// Offsets::IsReady() tells you if load succeeded. Fallback: uses disk cache if network fails.
 
 #include <cstdint>
 #include <string>
+#include <fstream>
+#include <filesystem>
+#include <cstdio>
+
+#include <windows.h>
+#include <winhttp.h>
+#pragma comment(lib, "winhttp.lib")
+
+#include "../utils/json/json.hpp"
+#include "../utils/output/output.hpp"
+
 namespace Offsets {
-    inline std::string ClientVersion = "version-4aeb17bd13994560";
+namespace fs = std::filesystem;
+using json = nlohmann::json;
 
-    namespace AnimationTrack {
-        inline constexpr uintptr_t Animation = 0xd0;
-        inline constexpr uintptr_t Animator = 0x118;
-        inline constexpr uintptr_t IsPlaying = 0x4f8;
-        inline constexpr uintptr_t Looped = 0xf5;
-        inline constexpr uintptr_t Speed = 0xe4;
-    }
+inline std::string ClientVersion = {};
+inline bool Loaded = false;
 
-    namespace BasePart {
-        inline constexpr uintptr_t AssemblyAngularVelocity = 0x134;
-        inline constexpr uintptr_t AssemblyLinearVelocity = 0x128;
-        inline constexpr uintptr_t Color3 = 0x194;
-        inline constexpr uintptr_t Material = 0x260;
-        inline constexpr uintptr_t Position = 0x11c;
-        inline constexpr uintptr_t Primitive = 0x148;
-        inline constexpr uintptr_t PrimitiveFlags = 0x28d;
-        inline constexpr uintptr_t PrimitiveOwner = 0x208;
-        inline constexpr uintptr_t Rotation = 0xf8;
-        inline constexpr uintptr_t Shape = 0x1b1;
-        inline constexpr uintptr_t Size = 0x1cc;
-        inline constexpr uintptr_t Transparency = 0xf0;
-        inline constexpr uintptr_t ValidatePrimitive = 0x6;
-    }
-
-    namespace ByteCode {
-        inline constexpr uintptr_t Pointer = 0x10;
-        inline constexpr uintptr_t Size = 0x20;
-    }
-
-    namespace Camera {
-        inline constexpr uintptr_t CameraSubject = 0xe8;
-        inline constexpr uintptr_t CameraType = 0x158;
-        inline constexpr uintptr_t FieldOfView = 0x160;
-        inline constexpr uintptr_t Position = 0x11c;
-        inline constexpr uintptr_t Rotation = 0xf8;
-    }
-
-    namespace ClickDetector {
-        inline constexpr uintptr_t MaxActivationDistance = 0x100;
-        inline constexpr uintptr_t MouseIcon = 0xe0;
-    }
-
-    namespace DataModel {
-        inline constexpr uintptr_t CreatorId = 0x188;
-        inline constexpr uintptr_t GameId = 0x190;
-        inline constexpr uintptr_t GameLoaded = 0x640;
-        inline constexpr uintptr_t JobId = 0x138;
-        inline constexpr uintptr_t PlaceId = 0x198;
-        inline constexpr uintptr_t PlaceVersion = 0x1b4;
-        inline constexpr uintptr_t PrimitiveCount = 0x480;
-        inline constexpr uintptr_t ScriptContext = 0x3d0;
-        inline constexpr uintptr_t ServerIP = 0x628;
-        inline constexpr uintptr_t Workspace = 0x178;
-    }
-
-    namespace FakeDataModel {
-        inline constexpr uintptr_t Pointer = 0x73a7088;
-        inline constexpr uintptr_t RealDataModel = 0x1c0;
-    }
-
-    namespace GuiObject {
-        inline constexpr uintptr_t BackgroundColor3 = 0x508;
-        inline constexpr uintptr_t BorderColor3 = 0x514;
-        inline constexpr uintptr_t Image = 0xa00;
-        inline constexpr uintptr_t LayoutOrder = 0x544;
-        inline constexpr uintptr_t Position = 0x4d8;
-        inline constexpr uintptr_t RichText = 0xa98;
-        inline constexpr uintptr_t Rotation = 0x188;
-        inline constexpr uintptr_t ScreenGui_Enabled = 0x48c;
-        inline constexpr uintptr_t Size = 0x4f8;
-        inline constexpr uintptr_t Text = 0xdf8;
-        inline constexpr uintptr_t TextColor3 = 0xea8;
-        inline constexpr uintptr_t Visible = 0x571;
-    }
-
-    namespace Humanoid {
-        inline constexpr uintptr_t AutoRotate = 0x1d9;
-        inline constexpr uintptr_t Health = 0x194;
-        inline constexpr uintptr_t HipHeight = 0x1a0;
-        inline constexpr uintptr_t HumanoidState = 0x858;
-        inline constexpr uintptr_t HumanoidStateID = 0x20;
-        inline constexpr uintptr_t JumpHeight = 0x1ac;
-        inline constexpr uintptr_t JumpPower = 0x1b0;
-        inline constexpr uintptr_t MaxHealth = 0x1b4;
-        inline constexpr uintptr_t MaxSlopeAngle = 0x1b8;
-        inline constexpr uintptr_t RigType = 0x1c8;
-        inline constexpr uintptr_t Walkspeed = 0x1d4;
-        inline constexpr uintptr_t WalkspeedCheck = 0x3a0;
-    }
-
-    namespace Instance {
-        inline constexpr uintptr_t AttributeContainer = 0x40;
-        inline constexpr uintptr_t AttributeList = 0x18;
-        inline constexpr uintptr_t AttributeToNext = 0x58;
-        inline constexpr uintptr_t AttributeToValue = 0x18;
-        inline constexpr uintptr_t ChildrenEnd = 0x8;
-        inline constexpr uintptr_t ChildrenStart = 0x60;
-        inline constexpr uintptr_t ClassDescriptor = 0x18;
-        inline constexpr uintptr_t ClassName = 0x8;
-        inline constexpr uintptr_t Name = 0x80;
-        inline constexpr uintptr_t Parent = 0x50;
-    }
-
-    namespace Lighting {
-        inline constexpr uintptr_t Ambient = 0xd8;
-        inline constexpr uintptr_t Brightness = 0x120;
-        inline constexpr uintptr_t ClockTime = 0x1b8;
-        inline constexpr uintptr_t ColorShift_Bottom = 0xf0;
-        inline constexpr uintptr_t ColorShift_Top = 0xe4;
-        inline constexpr uintptr_t ExposureCompensation = 0x12c;
-        inline constexpr uintptr_t FogColor = 0xfc;
-        inline constexpr uintptr_t FogEnd = 0x134;
-        inline constexpr uintptr_t FogStart = 0x138;
-        inline constexpr uintptr_t GeographicLatitude = 0x190;
-        inline constexpr uintptr_t OutdoorAmbient = 0x108;
-    }
-
-    namespace LocalScript {
-        inline constexpr uintptr_t ByteCode = 0x1a8;
-        inline constexpr uintptr_t Hash = 0x1b8;
-    }
-
-    namespace MeshPart {
-        inline constexpr uintptr_t MeshId = 0x2e0;
-        inline constexpr uintptr_t Texture = 0x310;
-    }
-
-    namespace Misc {
-        inline constexpr uintptr_t Adornee = 0x108;
-        inline constexpr uintptr_t AnimationId = 0xd0;
-        inline constexpr uintptr_t StringLength = 0x10;
-        inline constexpr uintptr_t Value = 0xd0;
-    }
-
-    namespace Model {
-        inline constexpr uintptr_t PrimaryPart = 0x248;
-        inline constexpr uintptr_t Scale = 0x154;
-    }
-
-    namespace ModuleScript {
-        inline constexpr uintptr_t ByteCode = 0x150;
-        inline constexpr uintptr_t Hash = 0x168;
-    }
-
-    namespace MouseService {
-        inline constexpr uintptr_t InputObject = 0x100;
-        inline constexpr uintptr_t MousePosition = 0xec;
-        inline constexpr uintptr_t SensitivityPointer = 0x76780b0;
-    }
-
-    namespace Player {
-        inline constexpr uintptr_t CameraMode = 0x2f8;
-        inline constexpr uintptr_t Country = 0x110;
-        inline constexpr uintptr_t DisplayName = 0x130;
-        inline constexpr uintptr_t Gender = 0xe58;
-        inline constexpr uintptr_t LocalPlayer = 0x130;
-        inline constexpr uintptr_t MaxZoomDistance = 0x2f0;
-        inline constexpr uintptr_t MinZoomDistance = 0x2f4;
-        inline constexpr uintptr_t ModelInstance = 0x360;
-        inline constexpr uintptr_t Mouse = 0xcc8;
-        inline constexpr uintptr_t Team = 0x270;
-        inline constexpr uintptr_t UserId = 0x298;
-    }
-
-    namespace PlayerMouse {
-        inline constexpr uintptr_t Icon = 0xe0;
-        inline constexpr uintptr_t Workspace = 0x168;
-    }
-
-    namespace PrimitiveFlags {
-        inline constexpr uintptr_t Anchored = 0x2;
-        inline constexpr uintptr_t CanCollide = 0x8;
-        inline constexpr uintptr_t CanTouch = 0x10;
-    }
-
-    namespace ProximityPrompt {
-        inline constexpr uintptr_t ActionText = 0xd0;
-        inline constexpr uintptr_t Enabled = 0x156;
-        inline constexpr uintptr_t GamepadKeyCode = 0x13c;
-        inline constexpr uintptr_t HoldDuration = 0x140;
-        inline constexpr uintptr_t KeyCode = 0x144;
-        inline constexpr uintptr_t MaxActivationDistance = 0x148;
-        inline constexpr uintptr_t ObjectText = 0xf0;
-        inline constexpr uintptr_t RequiresLineOfSight = 0x157;
-    }
-
-    namespace RenderView {
-        inline constexpr uintptr_t DeviceD3D11 = 0x8;
-        inline constexpr uintptr_t FramebufferD3D11 = 0x690;
-        inline constexpr uintptr_t TextureD3D11 = 0x680;
-        inline constexpr uintptr_t VisualEngine = 0x10;
-    }
-
-    namespace RunService {
-        inline constexpr uintptr_t HeartbeatFPS = 0xb8;
-        inline constexpr uintptr_t HeartbeatTask = 0xf0;
-    }
-
-    namespace Sky {
-        inline constexpr uintptr_t MoonAngularSize = 0x21c;
-        inline constexpr uintptr_t MoonTextureId = 0xd8;
-        inline constexpr uintptr_t SkyboxBk = 0x100;
-        inline constexpr uintptr_t SkyboxDn = 0x128;
-        inline constexpr uintptr_t SkyboxFt = 0x150;
-        inline constexpr uintptr_t SkyboxLf = 0x178;
-        inline constexpr uintptr_t SkyboxOrientation = 0x210;
-        inline constexpr uintptr_t SkyboxRt = 0x1a0;
-        inline constexpr uintptr_t SkyboxUp = 0x1c8;
-        inline constexpr uintptr_t StarCount = 0x220;
-        inline constexpr uintptr_t SunAngularSize = 0x214;
-        inline constexpr uintptr_t SunTextureId = 0x1f0;
-    }
-
-    namespace SpecialMesh {
-        inline constexpr uintptr_t MeshId = 0x108;
-        inline constexpr uintptr_t Scale = 0x154;
-    }
-
-    namespace StatsItem {
-        inline constexpr uintptr_t Value = 0xc8;
-    }
-
-    namespace TaskScheduler {
-        inline constexpr uintptr_t FakeDataModelToDataModel = 0x1b0;
-        inline constexpr uintptr_t JobEnd = 0x1d8;
-        inline constexpr uintptr_t JobName = 0x18;
-        inline constexpr uintptr_t JobStart = 0x1d0;
-        inline constexpr uintptr_t MaxFPS = 0x1b0;
-        inline constexpr uintptr_t Pointer = 0x778c0e8;
-        inline constexpr uintptr_t RenderJobToFakeDataModel = 0x38;
-        inline constexpr uintptr_t RenderJobToRenderView = 0x218;
-    }
-
-    namespace Team {
-        inline constexpr uintptr_t BrickColor = 0xd0;
-    }
-
-    namespace Textures {
-        inline constexpr uintptr_t Decal_Texture = 0x198;
-        inline constexpr uintptr_t Texture_Texture = 0x198;
-    }
-
-    namespace VisualEngine {
-        inline constexpr uintptr_t Dimensions = 0x720;
-        inline constexpr uintptr_t Pointer = 0x7109240;
-        inline constexpr uintptr_t ToDataModel1 = 0x700;
-        inline constexpr uintptr_t ToDataModel2 = 0x1c0;
-        inline constexpr uintptr_t ViewMatrix = 0x4b0;
-    }
-
-    namespace silent {
-        inline constexpr uintptr_t FramePositionOffsetX = 0x4D4;
-        inline constexpr uintptr_t FramePositionOffsetY = 0x4DC;
-        inline constexpr uintptr_t FramePositionX = 0x4D0;
-        inline constexpr uintptr_t FramePositionY = 0x4D8;
-    }
-
-    namespace Workspace {
-        inline constexpr uintptr_t CurrentCamera = 0x410;
-        inline constexpr uintptr_t DistributedGameTime = 0x430;
-        inline constexpr uintptr_t Gravity = 0x1ac;
-        inline constexpr uintptr_t GravityContainer = 0x398;
-        inline constexpr uintptr_t PrimitivesPointer1 = 0x398;
-        inline constexpr uintptr_t PrimitivesPointer2 = 0x210;
-        inline constexpr uintptr_t ReadOnlyGravity = 0x958;
-        inline constexpr uintptr_t ForceNewAFKDuration = 0x1F8;
-
-    }
-
+// ---- offset storage (was constexpr, now runtime-loaded) ----
+namespace BasePart {
+    inline uintptr_t AssemblyAngularVelocity = 0;
+    inline uintptr_t AssemblyLinearVelocity = 0;
+    inline uintptr_t Color3 = 0;
+    inline uintptr_t Position = 0;
+    inline uintptr_t Primitive = 0;
+    inline uintptr_t Rotation = 0;
+    inline uintptr_t Size = 0;
+    inline uintptr_t Transparency = 0;
 }
+namespace Camera {
+    inline uintptr_t CameraSubject = 0;
+    inline uintptr_t Position = 0;
+    inline uintptr_t Rotation = 0;
+}
+namespace DataModel {
+    inline uintptr_t CreatorId = 0;
+    inline uintptr_t GameId = 0;
+    inline uintptr_t PlaceId = 0;
+    inline uintptr_t ServerIP = 0;
+}
+namespace FakeDataModel {
+    inline uintptr_t Pointer = 0;
+    inline uintptr_t RealDataModel = 0;
+}
+namespace GuiObject {
+    inline uintptr_t Text = 0;
+}
+namespace Humanoid {
+    inline uintptr_t Health = 0;
+    inline uintptr_t HipHeight = 0;
+    inline uintptr_t HumanoidState = 0;
+    inline uintptr_t HumanoidStateID = 0;
+    inline uintptr_t JumpPower = 0;
+    inline uintptr_t MaxHealth = 0;
+    inline uintptr_t RigType = 0;
+    inline uintptr_t Walkspeed = 0;
+    inline uintptr_t WalkspeedCheck = 0;
+}
+namespace Instance {
+    inline uintptr_t ChildrenEnd = 0;
+    inline uintptr_t ChildrenStart = 0;
+    inline uintptr_t ClassDescriptor = 0;
+    inline uintptr_t ClassName = 0;
+    inline uintptr_t Name = 0;
+    inline uintptr_t Parent = 0;
+}
+namespace Lighting {
+    inline uintptr_t Ambient = 0;
+    inline uintptr_t Brightness = 0;
+    inline uintptr_t ClockTime = 0;
+    inline uintptr_t ColorShift_Bottom = 0;
+    inline uintptr_t ColorShift_Top = 0;
+    inline uintptr_t ExposureCompensation = 0;
+    inline uintptr_t FogColor = 0;
+    inline uintptr_t FogEnd = 0;
+    inline uintptr_t FogStart = 0;
+    inline uintptr_t GeographicLatitude = 0;
+    inline uintptr_t OutdoorAmbient = 0;
+}
+namespace Misc {
+    inline uintptr_t Adornee = 0;
+    inline uintptr_t Value = 0;
+}
+namespace MouseService {
+    inline uintptr_t InputObject = 0;
+}
+namespace Player {
+    inline uintptr_t LocalPlayer = 0;
+    inline uintptr_t ModelInstance = 0;
+    inline uintptr_t Team = 0;
+    inline uintptr_t UserId = 0;
+}
+namespace PrimitiveFlags {
+    inline uintptr_t Anchored = 0;
+}
+namespace TaskScheduler {
+    inline uintptr_t JobEnd = 0;
+    inline uintptr_t JobName = 0;
+    inline uintptr_t JobStart = 0;
+    inline uintptr_t MaxFPS = 0;
+    inline uintptr_t Pointer = 0;
+}
+namespace VisualEngine {
+    inline uintptr_t Dimensions = 0;
+    inline uintptr_t Pointer = 0;
+    inline uintptr_t ViewMatrix = 0;
+}
+namespace Workspace {
+    inline uintptr_t ForceNewAFKDuration = 0;
+    inline uintptr_t ReadOnlyGravity = 0;
+}
+namespace silent {
+    inline uintptr_t FramePositionX = 0;
+    inline uintptr_t FramePositionY = 0;
+}
+
+// ---- internals ----
+inline std::string HttpGet(const wchar_t* host, const wchar_t* path) {
+    std::string out;
+    HINTERNET hSession = WinHttpOpen(L"Mozilla/5.0 (Windows NT 10.0; Win64; x64) yn-ext/1.0",
+        WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    if (!hSession) throw std::runtime_error("WinHttpOpen failed");
+    HINTERNET hConnect = WinHttpConnect(hSession, host, INTERNET_DEFAULT_HTTPS_PORT, 0);
+    if (!hConnect) { WinHttpCloseHandle(hSession); throw std::runtime_error("WinHttpConnect failed"); }
+    HINTERNET hReq = WinHttpOpenRequest(hConnect, L"GET", path, NULL,
+        WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
+    if (!hReq) { WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); throw std::runtime_error("WinHttpOpenRequest failed"); }
+    if (!WinHttpSendRequest(hReq, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0)) {
+        WinHttpCloseHandle(hReq); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession);
+        throw std::runtime_error("WinHttpSendRequest failed");
+    }
+    if (!WinHttpReceiveResponse(hReq, NULL)) {
+        WinHttpCloseHandle(hReq); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession);
+        throw std::runtime_error("WinHttpReceiveResponse failed");
+    }
+    DWORD status = 0, statusLen = sizeof(status);
+    WinHttpQueryHeaders(hReq, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+        WINHTTP_HEADER_NAME_BY_INDEX, &status, &statusLen, WINHTTP_NO_HEADER_INDEX);
+    if (status != 200) {
+        WinHttpCloseHandle(hReq); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession);
+        throw std::runtime_error("HTTP status " + std::to_string(status));
+    }
+    DWORD dwSize = 0;
+    do {
+        DWORD dwDownloaded = 0;
+        if (!WinHttpQueryDataAvailable(hReq, &dwSize)) break;
+        if (dwSize == 0) break;
+        std::string buf(dwSize, '\0');
+        if (!WinHttpReadData(hReq, buf.data(), dwSize, &dwDownloaded)) break;
+        out.append(buf.data(), dwDownloaded);
+    } while (dwSize > 0);
+    WinHttpCloseHandle(hReq); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession);
+    return out;
+}
+
+inline std::string TrimStr(std::string v) {
+    while (!v.empty() && (v.back() == '\n' || v.back() == '\r' || v.back() == ' ' || v.back() == '\t' || v.back() == '"')) v.pop_back();
+    while (!v.empty() && (v.front() == ' ' || v.front() == '\t' || v.front() == '\n' || v.front() == '\r' || v.front() == '"')) v.erase(v.begin());
+    return v;
+}
+
+inline uintptr_t Lookup(const json& off, const char* cls, const char* field) {
+    auto it = off.find(cls);
+    if (it == off.end() || !it->is_object()) return 0;
+    auto jt = it->find(field);
+    if (jt == it->end()) return 0;
+    try {
+        if (jt->is_string()) return static_cast<uintptr_t>(std::stoull(jt->get<std::string>(), nullptr, 0));
+        return jt->get<uintptr_t>();
+    } catch (...) { return 0; }
+}
+
+inline void FillFromJson(const json& data) {
+    if (data.contains("Roblox Version") && data["Roblox Version"].is_string())
+        ClientVersion = data["Roblox Version"].get<std::string>();
+    else if (data.contains("Roblox Version"))
+        ClientVersion = TrimStr(data["Roblox Version"].dump());
+
+    if (!data.contains("Offsets") || !data["Offsets"].is_object())
+        throw std::runtime_error("offsets.json missing 'Offsets' object");
+    const auto& off = data["Offsets"];
+    int missing = 0;
+#define SET(CLS, FIELD) do { \
+    uintptr_t v = Lookup(off, #CLS, #FIELD); \
+    CLS::FIELD = v; \
+    if (v == 0) { missing++; logger::print<logger::level::warn>("offset missing: %s::%s", #CLS, #FIELD); } \
+} while (0)
+
+    SET(BasePart, AssemblyAngularVelocity);
+    SET(BasePart, AssemblyLinearVelocity);
+    SET(BasePart, Color3);
+    SET(BasePart, Position);
+    SET(BasePart, Primitive);
+    SET(BasePart, Rotation);
+    SET(BasePart, Size);
+    SET(BasePart, Transparency);
+    SET(Camera, CameraSubject);
+    SET(Camera, Position);
+    SET(Camera, Rotation);
+    SET(DataModel, CreatorId);
+    SET(DataModel, GameId);
+    SET(DataModel, PlaceId);
+    SET(DataModel, ServerIP);
+    SET(FakeDataModel, Pointer);
+    SET(FakeDataModel, RealDataModel);
+    SET(GuiObject, Text);
+    SET(Humanoid, Health);
+    SET(Humanoid, HipHeight);
+    SET(Humanoid, HumanoidState);
+    SET(Humanoid, HumanoidStateID);
+    SET(Humanoid, JumpPower);
+    SET(Humanoid, MaxHealth);
+    SET(Humanoid, RigType);
+    SET(Humanoid, Walkspeed);
+    SET(Humanoid, WalkspeedCheck);
+    SET(Instance, ChildrenEnd);
+    SET(Instance, ChildrenStart);
+    SET(Instance, ClassDescriptor);
+    SET(Instance, ClassName);
+    SET(Instance, Name);
+    SET(Instance, Parent);
+    SET(Lighting, Ambient);
+    SET(Lighting, Brightness);
+    SET(Lighting, ClockTime);
+    SET(Lighting, ColorShift_Bottom);
+    SET(Lighting, ColorShift_Top);
+    SET(Lighting, ExposureCompensation);
+    SET(Lighting, FogColor);
+    SET(Lighting, FogEnd);
+    SET(Lighting, FogStart);
+    SET(Lighting, GeographicLatitude);
+    SET(Lighting, OutdoorAmbient);
+    SET(Misc, Adornee);
+    SET(Misc, Value);
+    SET(MouseService, InputObject);
+    SET(Player, LocalPlayer);
+    SET(Player, ModelInstance);
+    SET(Player, Team);
+    SET(Player, UserId);
+    SET(PrimitiveFlags, Anchored);
+    SET(TaskScheduler, JobEnd);
+    SET(TaskScheduler, JobName);
+    SET(TaskScheduler, JobStart);
+    SET(TaskScheduler, MaxFPS);
+    SET(TaskScheduler, Pointer);
+    SET(VisualEngine, Dimensions);
+    SET(VisualEngine, Pointer);
+    SET(VisualEngine, ViewMatrix);
+    SET(Workspace, ForceNewAFKDuration);
+    SET(Workspace, ReadOnlyGravity);
+    // silent aim mouse offsets live under different keys depending on dumper version;
+    // try canonical names first, then common alternates.
+    silent::FramePositionX = Lookup(off, "silent", "FramePositionX");
+    if (silent::FramePositionX == 0) silent::FramePositionX = Lookup(off, "MouseService", "FramePositionX");
+    if (silent::FramePositionX == 0) silent::FramePositionX = 0x4D0;
+    silent::FramePositionY = Lookup(off, "silent", "FramePositionY");
+    if (silent::FramePositionY == 0) silent::FramePositionY = Lookup(off, "MouseService", "FramePositionY");
+    if (silent::FramePositionY == 0) silent::FramePositionY = 0x4D8;
+#undef SET
+    if (missing > 0)
+        logger::print<logger::level::warn>("%d offsets missing from imtheo payload (left as 0, check names)", missing);
+}
+
+// Call once at startup. Returns true on success (fresh or disk cache).
+// Throws only if no cache exists AND network fails.
+inline bool Init() {
+    fs::path versionFile = "offsets.version";
+    fs::path offsetsFile = "offsets.json";
+    try {
+        std::string liveVersion;
+        try { liveVersion = TrimStr(HttpGet(L"offsets.imtheo.lol", L"/roblox/version")); }
+        catch (const std::exception& e) {
+            logger::print<logger::level::warn>("version check failed (%s), trying disk cache", e.what());
+        }
+        std::string cachedVersion;
+        { std::ifstream f(versionFile); if (f) std::getline(f, cachedVersion); cachedVersion = TrimStr(cachedVersion); }
+
+        bool needDownload = !fs::exists(offsetsFile) || (!liveVersion.empty() && liveVersion != cachedVersion);
+        if (needDownload && !liveVersion.empty()) {
+            logger::print<logger::level::info>("fetching fresh offsets for %s", liveVersion.c_str());
+            std::string body = HttpGet(L"offsets.imtheo.lol", L"/offsets.json");
+            { std::ofstream f(offsetsFile, std::ios::trunc | std::ios::binary); f << body; }
+            { std::ofstream f(versionFile, std::ios::trunc); f << liveVersion; }
+        } else if (needDownload && liveVersion.empty()) {
+            // no network + no usable cache handled below
+        }
+        std::ifstream f(offsetsFile);
+        if (!f) throw std::runtime_error("offsets.json missing and download failed");
+        json data = json::parse(f);
+        FillFromJson(data);
+        Loaded = true;
+        logger::print<logger::level::info>("offsets ready (%s)", ClientVersion.c_str());
+        return true;
+    } catch (const std::exception& e) {
+        logger::print<logger::level::error>("Offsets::Init failed: %s", e.what());
+        Loaded = false;
+        return false;
+    }
+}
+
+inline bool IsReady() { return Loaded; }
+} // namespace Offsets

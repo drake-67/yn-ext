@@ -70,6 +70,13 @@ auto main() -> std::int32_t {
     logger::setup();
     SetConsoleTitle("");
 
+    if (!Offsets::Init()) {
+        logger::print<logger::level::error>("offsets failed to load (no cache + no network). exiting.");
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+        return EXIT_FAILURE;
+    }
+    logger::print<logger::level::info>("offsets version: %s", Offsets::ClientVersion.c_str());
+
     const char* process_name = "RobloxPlayerBeta.exe";
 
     wait_for_process(process_name);
