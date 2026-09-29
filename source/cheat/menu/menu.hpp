@@ -393,6 +393,12 @@ ID3D11ShaderResourceView* LoadTextureFromMemory(ID3D11Device* device, const std:
 
 void RenderUserImage(ID3D11Device* device, const std::string& user_id) {
     if (!device) return;
+    // LRU-ish cap: avatar cache is per-player; drop oldest inserts past 64.
+    if (image_cache.size() >= 64) {
+        auto it = image_cache.begin();
+        if (it->second.texture) it->second.texture->Release();
+        image_cache.erase(it);
+    }
     auto it = image_cache.find(user_id);
     if (it == image_cache.end()) {
         std::vector<unsigned char> image_data = get_user_image(user_id);
@@ -400,8 +406,7 @@ void RenderUserImage(ID3D11Device* device, const std::string& user_id) {
         ID3D11ShaderResourceView* tex = LoadTextureFromMemory(device, image_data);
         if (!tex) return; // decode failed — retry next frame
         ImageCacheEntry entry;
-        entry.image_data = std::move(image_data);
-        entry.texture = tex;
+        entry.texture = tex; // image_data freed after upload — not retained
         image_cache[user_id] = std::move(entry);
     }
 }
@@ -415,8 +420,7 @@ void RenderProfileImage(ID3D11Device* device, const std::string& user_id) {
         ID3D11ShaderResourceView* tex = LoadTextureFromMemory(device, image_data);
         if (!tex) return;
         ImageCacheEntry entry;
-        entry.image_data = std::move(image_data);
-        entry.texture = tex;
+        entry.texture = tex; // image_data freed after upload — not retained
         image_profile_cache[user_id] = std::move(entry);
     }
 }

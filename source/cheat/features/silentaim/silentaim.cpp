@@ -1,4 +1,5 @@
 #include "../../../globals/globals.h"
+#include "../cache/cache.hpp"
 #include "../../../sdk/datamodel/part_t.hpp"
 #include <Windows.h>
 #include <thread>
@@ -232,7 +233,7 @@ namespace silent {
         }
 
         if (globals::silent::sticky && !current_target_name.empty()) {
-            for (const auto& player : globals::game::player_cache) {
+            for (const auto& player : player_cache::get_snapshot()) {
                 if (player.Name == current_target_name && passes_checks(player)) {
                     math::vector3_t target_position = get_hitpart_position(player);
 
@@ -263,7 +264,7 @@ namespace silent {
 
         float closest_distance = FLT_MAX;
 
-        for (const auto& player : globals::game::player_cache) {
+        for (const auto& player : player_cache::get_snapshot()) {
             if (!passes_checks(player)) {
                 continue;
             }

@@ -487,17 +487,17 @@ LRESULT CALLBACK wnd_proc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 	switch (msg) {
 	case WM_SIZE:
 		if (instance && instance->detail && instance->detail->swap_chain && wParam != SIZE_MINIMIZED) {
-			if (instance->detail->render_target_view)
+			if (instance->detail->render_target_view) {
 				instance->detail->render_target_view->Release();
+				instance->detail->render_target_view = nullptr;
+			}
 
-			instance->detail->swap_chain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0);
-
-			ID3D11Texture2D* back_buffer = nullptr;
-			instance->detail->swap_chain->GetBuffer(0, IID_PPV_ARGS(&back_buffer));
-
-			if (back_buffer) {
-				instance->detail->device->CreateRenderTargetView(back_buffer, NULL, &instance->detail->render_target_view);
-				back_buffer->Release();
+			if (SUCCEEDED(instance->detail->swap_chain->ResizeBuffers(0, (UINT)LOWORD(lParam), (UINT)HIWORD(lParam), DXGI_FORMAT_UNKNOWN, 0))) {
+				ID3D11Texture2D* back_buffer = nullptr;
+				if (SUCCEEDED(instance->detail->swap_chain->GetBuffer(0, IID_PPV_ARGS(&back_buffer))) && back_buffer) {
+					instance->detail->device->CreateRenderTargetView(back_buffer, NULL, &instance->detail->render_target_view);
+					back_buffer->Release();
+				}
 			}
 		}
 		return 0;
@@ -693,7 +693,9 @@ void render_t::start_render() {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImFontConfig config;
 	config.SizePixels = 12;
+	config.FontDataOwnedByAtlas = false; // static blobs — atlas must not free them
 	ImFontConfig fa_config; fa_config.MergeMode = true; fa_config.PixelSnapH = true;
+	fa_config.FontDataOwnedByAtlas = false;
 
 	ImGui::GetIO().FontDefault = ImGui::GetIO().Fonts->AddFontDefault();
 
@@ -729,8 +731,17 @@ void render_t::start_render() {
 
 
 
-		HWND target = FindWindowA("Chrome_WidgetWin_1", "Discord Overlay");
-		if (!target || IsIconic(target)) {
+		static HWND cached_target = nullptr;
+		static DWORD last_query_tick = 0;
+		static RECT last_rect = {};
+		DWORD now_tick = GetTickCount();
+		if (!cached_target || now_tick - last_query_tick > 1000) {
+			cached_target = FindWindowA("Chrome_WidgetWin_1", "Discord Overlay");
+			last_query_tick = now_tick;
+		}
+		HWND target = cached_target;
+		if (!target || !IsWindow(target) || IsIconic(target)) {
+			cached_target = nullptr;
 			MoveWindow(this->detail->window, 0, 0, 0, 0, true);
 		}
 		else {
@@ -738,9 +749,12 @@ void render_t::start_render() {
 			if (GetClientRect(target, &client_rect)) {
 				POINT client_to_screen_pos = { client_rect.left, client_rect.top };
 				ClientToScreen(target, &client_to_screen_pos);
-				MoveWindow(this->detail->window, client_to_screen_pos.x, client_to_screen_pos.y,
-					client_rect.right - client_rect.left,
-					client_rect.bottom - client_rect.top, true);
+				if (memcmp(&client_rect, &last_rect, sizeof(RECT)) != 0) {
+					MoveWindow(this->detail->window, client_to_screen_pos.x, client_to_screen_pos.y,
+						client_rect.right - client_rect.left,
+						client_rect.bottom - client_rect.top, true);
+					last_rect = client_rect;
+				}
 			}
 		}
 

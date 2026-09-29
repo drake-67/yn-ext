@@ -529,3 +529,8 @@ void player_cache::hook_cache() {
         std::this_thread::sleep_for(std::chrono::milliseconds(6));
     }
 }
+
+std::vector<rbx::player_t> player_cache::get_snapshot() {
+    std::lock_guard<std::mutex> lock(cache_mutex);
+    return globals::game::player_cache;
+}

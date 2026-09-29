@@ -1,5 +1,6 @@
 ﻿#include "../../../cheat/drawing/imgui/imgui.h"
 #include "../../../cheat/drawing/imgui/imgui_internal.h"
+#include "../cache/cache.hpp"
 #include "../../../globals/globals.h"
 #include "../../../sdk/datamodel/part_t.hpp"
 #include "visuals.hpp"
@@ -304,7 +305,7 @@ namespace elements {
     }
 
     void state_esp(const rbx::player_t& player, ImDrawList* draw, const ImVec2& box_pos, const ImVec2& box_size) {
-
+        if (!player.humanoid.address) return;
         rbx::humanoid_t humanoid(player.humanoid.address);
         int humanoid_state = humanoid.get_humanoid_state();
         const char* sz_state = "Unknown";
@@ -480,6 +481,7 @@ namespace elements {
 
 
     void rig_type(const rbx::player_t& player, ImDrawList* draw, const ImVec2& box_pos, const ImVec2& box_size, float offset = 16.0f) {
+        if (!player.humanoid.address) return;
         rbx::humanoid_t humanoid(player.humanoid.address);
         int rig_type = humanoid.get_rig_type();
         const char* sz_rig = "Unknown";
@@ -733,7 +735,8 @@ void visuals_t::renderr() {
 
 
 
-    for (const auto& player : globals::game::player_cache) {
+    for (const auto& player : player_cache::get_snapshot()) {
+        try {
         if (!player.character.address) continue;
         if (player.localplayer) continue;
         if (!player.head.address) continue;
@@ -755,6 +758,7 @@ void visuals_t::renderr() {
         if (globals::visuals::headdot) {
             elements::headdot(player, draw);
         }
+        } catch (...) { continue; } // one stale player must not kill the render thread
     }
 
 }

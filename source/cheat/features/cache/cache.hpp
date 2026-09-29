@@ -5,6 +5,9 @@
 
 namespace player_cache {
     void hook_cache();
+    // Thread-safe snapshot: copies player_cache under the writer lock.
+    // Readers (aimbot/visuals/silent) must iterate the snapshot, never the live vector.
+    std::vector<rbx::player_t> get_snapshot();
 }
 
 namespace rbx {

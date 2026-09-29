@@ -15,6 +15,7 @@
 #include "cheat/features/rage/rage.hpp"
 #include "cheat/features/wallcheck/wallcheck.hpp"
 #include "cheat/features/silentaim/silentaim.hpp"
+#include "utils/curl/curl.h"
 
 static std::atomic<bool> process_active{ false };
 static std::atomic<bool> should_reinitialize{ false };
@@ -69,6 +70,7 @@ static void initialize_game() {
 auto main() -> std::int32_t {
     logger::setup();
     SetConsoleTitle("");
+    curl_global_init(CURL_GLOBAL_ALL);
 
     if (!Offsets::Init()) {
         logger::print<logger::level::error>("offsets failed to load (no cache + no network). exiting.");

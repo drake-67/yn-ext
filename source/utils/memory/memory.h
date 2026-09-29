@@ -27,7 +27,12 @@ Luck_WriteVirtualMemory
 class memory_t final {
 public:
 	memory_t() = default;
-	~memory_t() = default;
+	~memory_t() {
+		if (process_handle != NULL && process_handle != INVALID_HANDLE_VALUE) {
+			CloseHandle(process_handle);
+			process_handle = NULL;
+		}
+	}
 
 	bool attach_to_process(const std::string& process_name);
 
@@ -46,9 +51,9 @@ public:
 	std::uint64_t get_module_address();
 	HANDLE get_process_handle();
 private:
-	std::uint32_t process_id;
-	std::uint64_t base_address;
-	HANDLE process_handle;
+	std::uint32_t process_id{};
+	std::uint64_t base_address{};
+	HANDLE process_handle{};
 };
 
 template <typename T>

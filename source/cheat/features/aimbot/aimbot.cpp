@@ -1,5 +1,6 @@
 ﻿#include "aimbot.hpp"
 #include "../../../globals/globals.h"
+#include "../cache/cache.hpp"
 #include "../../../sdk/datamodel/part_t.hpp"
 #include <Windows.h>
 #include <thread>
@@ -97,7 +98,7 @@ namespace aimbot {
         auto cam_pos = cam.get_camera_position();
 
         if (globals::aim::aimbot_sticky && is_sticky_locked && !sticky_target.empty()) {
-            for (auto& plr : globals::game::player_cache) {
+            for (auto& plr : player_cache::get_snapshot()) {
                 if (plr.Name != sticky_target) continue;
                 if (plr.localplayer || !plr.character.address || !plr.head.address) {
                     is_sticky_locked = false;
@@ -148,7 +149,7 @@ namespace aimbot {
             return;
         }
 
-        for (auto& plr : globals::game::player_cache) {
+        for (auto& plr : player_cache::get_snapshot()) {
             if (plr.localplayer || !plr.character.address || !plr.head.address) continue;
 
             std::vector<math::vector3_t> parts;
