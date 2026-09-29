@@ -261,7 +261,7 @@
     <ClCompile Include="cheat\drawing\imgui\elements\draw.cpp" />
     <ClCompile Include="cheat\drawing\imgui\elements\dropdown.cpp" />
     <ClCompile Include="cheat\drawing\imgui\elements\helpers.cpp" />
-    <ClCompile Include="cheat\drawing\imgui\elements\keybind.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\elements\keybind.cpp"><ObjectFileName>$(IntDir)imgui_keybind.obj</ObjectFileName></ClCompile>
     <ClCompile Include="cheat\drawing\imgui\elements\section.cpp" />
     <ClCompile Include="cheat\drawing\imgui\elements\slider.cpp" />
     <ClCompile Include="cheat\drawing\imgui\elements\table.cpp" />
@@ -330,7 +330,7 @@
     <ClCompile Include="utils\clipper2lib\src\clipper.engine.cpp" />
     <ClCompile Include="utils\clipper2lib\src\clipper.offset.cpp" />
     <ClCompile Include="utils\clipper2lib\src\clipper.rectclip.cpp" />
-    <ClCompile Include="utils\key\keybind.cpp" />
+    <ClCompile Include="utils\key\keybind.cpp"><ObjectFileName>$(IntDir)utils_keybind.obj</ObjectFileName></ClCompile>
     <ClCompile Include="utils\memory\memory.cpp" />
     <ClCompile Include="utils\network\network.cpp" />
   </ItemGroup>
