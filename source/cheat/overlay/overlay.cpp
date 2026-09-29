@@ -5,10 +5,12 @@
 #include <dwmapi.h>
 #include <chrono>
 #include <thread>
-#include <D3DX11tex.h>
+#include <d3d11.h>
+#include <wincodec.h>
+#include <vector>
+#pragma comment(lib, "windowscodecs.lib")
 #include "../drawing/drawing.hpp"
 #include "../features/visuals/visuals.hpp"
-#include "../drawing/imgui/freetype/imgui_freetype.h"
 #include "../drawing/imgui/imgui_internal.h"
 #include "../menu/menu.hpp"
 #include "../../globals/globals.h"
@@ -25,10 +27,78 @@
 #include "../drawing/imgui/backends/TextEditor.h"
 #include "../drawing/imgui/settings/functions.h"
 #include "../drawing/imgui/data/fonts.h"
-#pragma comment(lib, "D3DX11.lib")
 #pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "d3dx11.lib")
 #pragma comment(lib, "dwmapi.lib")
+
+// D3DX11-free texture loader (stb first, WIC fallback for WEBP/PNG).
+// Replaces CreateTextureFromMemory so the project builds
+// without the legacy June-2010 DirectX SDK.
+static HRESULT CreateTextureFromMemory(ID3D11Device* device, const void* data, size_t size, ID3D11ShaderResourceView** out) {
+    if (!device || !data || !size || !out) return E_INVALIDARG;
+    *out = nullptr;
+    int w = 0, h = 0;
+    unsigned char* px = stbi_load_from_memory((const stbi_uc*)data, (int)size, &w, &h, nullptr, 4);
+    if (px && w > 0 && h > 0) {
+        D3D11_TEXTURE2D_DESC desc = {};
+        desc.Width = (UINT)w; desc.Height = (UINT)h;
+        desc.MipLevels = 1; desc.ArraySize = 1;
+        desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        desc.SampleDesc.Count = 1;
+        desc.Usage = D3D11_USAGE_DEFAULT;
+        desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        D3D11_SUBRESOURCE_DATA init = {};
+        init.pSysMem = px; init.SysMemPitch = (UINT)(w * 4);
+        ID3D11Texture2D* tex = nullptr;
+        HRESULT hr = device->CreateTexture2D(&desc, &init, &tex);
+        stbi_image_free(px);
+        if (FAILED(hr)) return hr;
+        HRESULT hr2 = device->CreateShaderResourceView(tex, nullptr, out);
+        tex->Release();
+        return hr2;
+    }
+    if (px) stbi_image_free(px);
+    // WIC fallback (handles PNG/JPEG/WEBP via OS codecs)
+    IWICImagingFactory* factory = nullptr;
+    HRESULT hr = CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&factory));
+    if (FAILED(hr)) return hr;
+    IWICStream* stream = nullptr;
+    hr = factory->CreateStream(&stream);
+    if (SUCCEEDED(hr)) hr = stream->InitializeFromMemory((WICInProcPointer)(BYTE*)data, (DWORD)size);
+    IWICBitmapDecoder* decoder = nullptr;
+    if (SUCCEEDED(hr)) hr = factory->CreateDecoderFromStream(stream, nullptr, WICDecodeMetadataCacheOnDemand, &decoder);
+    IWICBitmapFrameDecode* frame = nullptr;
+    if (SUCCEEDED(hr)) hr = decoder->GetFrame(0, &frame);
+    IWICFormatConverter* conv = nullptr;
+    if (SUCCEEDED(hr)) hr = factory->CreateFormatConverter(&conv);
+    if (SUCCEEDED(hr)) hr = conv->Initialize(frame, GUID_WICPixelFormat32bppRGBA, WICBitmapDitherTypeNone, nullptr, 0.0, WICBitmapPaletteTypeCustom);
+    UINT fw = 0, fh = 0;
+    if (SUCCEEDED(hr)) hr = conv->GetSize(&fw, &fh);
+    std::vector<BYTE> buf;
+    if (SUCCEEDED(hr)) {
+        buf.resize((size_t)fw * fh * 4);
+        hr = conv->CopyPixels(nullptr, fw * 4, (UINT)buf.size(), buf.data());
+    }
+    if (SUCCEEDED(hr)) {
+        D3D11_TEXTURE2D_DESC desc = {};
+        desc.Width = fw; desc.Height = fh;
+        desc.MipLevels = 1; desc.ArraySize = 1;
+        desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        desc.SampleDesc.Count = 1;
+        desc.Usage = D3D11_USAGE_DEFAULT;
+        desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+        D3D11_SUBRESOURCE_DATA init = {};
+        init.pSysMem = buf.data(); init.SysMemPitch = fw * 4;
+        ID3D11Texture2D* tex = nullptr;
+        hr = device->CreateTexture2D(&desc, &init, &tex);
+        if (SUCCEEDED(hr)) { hr = device->CreateShaderResourceView(tex, nullptr, out); tex->Release(); }
+    }
+    if (conv) conv->Release();
+    if (frame) frame->Release();
+    if (decoder) decoder->Release();
+    if (stream) stream->Release();
+    factory->Release();
+    return hr;
+}
 
 void game_explorer()
 {
@@ -621,21 +691,19 @@ void render_t::start_render() {
 	// <<<<<<<<<<< ///////////
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImFontConfig config;
-	config.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags::ImGuiFreeTypeBuilderFlags_ForceAutoHint;
 	config.SizePixels = 12;
 	ImFontConfig fa_config; fa_config.MergeMode = true; fa_config.PixelSnapH = true;
-	fa_config.FontBuilderFlags |= ImGuiFreeTypeBuilderFlags::ImGuiFreeTypeBuilderFlags_ForceAutoHint;
 
 	ImGui::GetIO().FontDefault = ImGui::GetIO().Fonts->AddFontDefault();
 
 
 	if (rust_model == nullptr)
-		D3DX11CreateShaderResourceViewFromMemory(this->detail->device, raw_esp, sizeof(raw_esp), nullptr, nullptr, &rust_model, 0);
+		CreateTextureFromMemory(this->detail->device, raw_esp, sizeof(raw_esp), &rust_model);
 
-	HRESULT basicbacona = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, typeshit, sizeof(typeshit), &info, pump, &basicbacon, 0); HRESULT ha = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, folder, sizeof(folder), &info, pump, &foldera, 0); HRESULT hb = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, camera, sizeof(camera), &info, pump, &cameraa, 0); HRESULT hc = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, lightning, sizeof(lightning), &info, pump, &lightninga, 0); HRESULT hd = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, humanoid, sizeof(humanoid), &info, pump, &humanoida, 0); HRESULT he = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, part, sizeof(part), &info, pump, &partaa, 0); HRESULT hf = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, players, sizeof(players), &info, pump, &playersa, 0); HRESULT hg = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, meshpart, sizeof(meshpart), &info, pump, &meshparta, 0);  HRESULT hag = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, model, sizeof(model), &info, pump, &modela, 0); HRESULT hga = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, player, sizeof(player), &info, pump, &playera, 0); HRESULT hgaa = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, terrain, sizeof(terrain), &info, pump, &terraina, 0); HRESULT hgba = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, localscript, sizeof(localscript), &info, pump, &localscripta, 0); HRESULT hcga = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, localscripts, sizeof(localscripts), &info, pump, &localscriptsa, 0); HRESULT hdga = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, playergui, sizeof(playergui), &info, pump, &playerguia, 0); HRESULT hfga = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, stats, sizeof(stats), &info, pump, &statsa, 0); HRESULT hgea = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, guiservice, sizeof(guiservice), &info, pump, &guiservicea, 0); HRESULT hgga = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, videocapture, sizeof(videocapture), &info, pump, &videocapturea, 0); HRESULT hhga = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, runservice, sizeof(runservice), &info, pump, &runservicea, 0); HRESULT hjga = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, frame, sizeof(frame), &info, pump, &framea, 0); HRESULT hsga = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, csd, sizeof(csd), &info, pump, &csda, 0); HRESULT h2ga = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, contentprovider, sizeof(contentprovider), &info, pump, &contentprovidera, 0); HRESULT h3ga = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, nonreplicated, sizeof(nonreplicated), &info, pump, &nonreplicateda, 0); HRESULT h4ga = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, startergear, sizeof(startergear), &info, pump, &startergeara, 0); HRESULT hg5a = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, timerdevice, sizeof(timerdevice), &info, pump, &timerdevicea, 0); HRESULT hg6a = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, backpack, sizeof(backpack), &info, pump, &backpacka, 0); HRESULT hg7a = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, marketplaceservice, sizeof(marketplaceservice), &info, pump, &marketplaceservicea, 0); HRESULT h8ga = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, soundservice, sizeof(soundservice), &info, pump, &soundservicea, 0); HRESULT h9ga = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, logservice, sizeof(logservice), &info, pump, &logservicea, 0); HRESULT h11ga = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, statsitem, sizeof(statsitem), &info, pump, &statsitema, 0); HRESULT h111ga = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, boolvalue, sizeof(boolvalue), &info, pump, &boolvaluea, 0); HRESULT h1111ga = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, intvalue, sizeof(intvalue), &info, pump, &intvaluea, 0); HRESULT h12ga = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, doubletype, sizeof(doubletype), &info, pump, &doubletypea, 0);
-	HRESULT hr = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, workspace, sizeof(workspace), &info, pump, &Imagine, 0);
+	HRESULT basicbacona = CreateTextureFromMemory(this->detail->device, typeshit, sizeof(typeshit), &basicbacon); HRESULT ha = CreateTextureFromMemory(this->detail->device, folder, sizeof(folder), &foldera); HRESULT hb = CreateTextureFromMemory(this->detail->device, camera, sizeof(camera), &cameraa); HRESULT hc = CreateTextureFromMemory(this->detail->device, lightning, sizeof(lightning), &lightninga); HRESULT hd = CreateTextureFromMemory(this->detail->device, humanoid, sizeof(humanoid), &humanoida); HRESULT he = CreateTextureFromMemory(this->detail->device, part, sizeof(part), &partaa); HRESULT hf = CreateTextureFromMemory(this->detail->device, players, sizeof(players), &playersa); HRESULT hg = CreateTextureFromMemory(this->detail->device, meshpart, sizeof(meshpart), &meshparta);  HRESULT hag = CreateTextureFromMemory(this->detail->device, model, sizeof(model), &modela); HRESULT hga = CreateTextureFromMemory(this->detail->device, player, sizeof(player), &playera); HRESULT hgaa = CreateTextureFromMemory(this->detail->device, terrain, sizeof(terrain), &terraina); HRESULT hgba = CreateTextureFromMemory(this->detail->device, localscript, sizeof(localscript), &localscripta); HRESULT hcga = CreateTextureFromMemory(this->detail->device, localscripts, sizeof(localscripts), &localscriptsa); HRESULT hdga = CreateTextureFromMemory(this->detail->device, playergui, sizeof(playergui), &playerguia); HRESULT hfga = CreateTextureFromMemory(this->detail->device, stats, sizeof(stats), &statsa); HRESULT hgea = CreateTextureFromMemory(this->detail->device, guiservice, sizeof(guiservice), &guiservicea); HRESULT hgga = CreateTextureFromMemory(this->detail->device, videocapture, sizeof(videocapture), &videocapturea); HRESULT hhga = CreateTextureFromMemory(this->detail->device, runservice, sizeof(runservice), &runservicea); HRESULT hjga = CreateTextureFromMemory(this->detail->device, frame, sizeof(frame), &framea); HRESULT hsga = CreateTextureFromMemory(this->detail->device, csd, sizeof(csd), &csda); HRESULT h2ga = CreateTextureFromMemory(this->detail->device, contentprovider, sizeof(contentprovider), &contentprovidera); HRESULT h3ga = CreateTextureFromMemory(this->detail->device, nonreplicated, sizeof(nonreplicated), &nonreplicateda); HRESULT h4ga = CreateTextureFromMemory(this->detail->device, startergear, sizeof(startergear), &startergeara); HRESULT hg5a = CreateTextureFromMemory(this->detail->device, timerdevice, sizeof(timerdevice), &timerdevicea); HRESULT hg6a = CreateTextureFromMemory(this->detail->device, backpack, sizeof(backpack), &backpacka); HRESULT hg7a = CreateTextureFromMemory(this->detail->device, marketplaceservice, sizeof(marketplaceservice), &marketplaceservicea); HRESULT h8ga = CreateTextureFromMemory(this->detail->device, soundservice, sizeof(soundservice), &soundservicea); HRESULT h9ga = CreateTextureFromMemory(this->detail->device, logservice, sizeof(logservice), &logservicea); HRESULT h11ga = CreateTextureFromMemory(this->detail->device, statsitem, sizeof(statsitem), &statsitema); HRESULT h111ga = CreateTextureFromMemory(this->detail->device, boolvalue, sizeof(boolvalue), &boolvaluea); HRESULT h1111ga = CreateTextureFromMemory(this->detail->device, intvalue, sizeof(intvalue), &intvaluea); HRESULT h12ga = CreateTextureFromMemory(this->detail->device, doubletype, sizeof(doubletype), &doubletypea);
+	HRESULT hr = CreateTextureFromMemory(this->detail->device, workspace, sizeof(workspace), &Imagine);
 
-	HRESULT typah = D3DX11CreateShaderResourceViewFromMemory(this->detail->device, ancientlogo, sizeof(ancientlogo), &info, pump, &anicentlogo, 0);
+	HRESULT typah = CreateTextureFromMemory(this->detail->device, ancientlogo, sizeof(ancientlogo), &anicentlogo);
 
 	var->font.icons[0] = io.Fonts->AddFontFromMemoryTTF(section_icons_hex, sizeof section_icons_hex, 15.f, &config, io.Fonts->GetGlyphRangesCyrillic());
 	var->font.icons[1] = io.Fonts->AddFontFromMemoryTTF(icons_hex, sizeof icons_hex, 5.f, &config, io.Fonts->GetGlyphRangesCyrillic());

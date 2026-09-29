@@ -5,7 +5,7 @@
 #include "../overlay/overlay.hpp"
 #include "../drawing/drawing.hpp"
 #include <algorithm>
-#include <D3DX11tex.h>
+#include <d3d11.h>
 #include "../drawing/imgui/imgui_internal.h"
 #include <string>
 #include "../../globals/globals.h"

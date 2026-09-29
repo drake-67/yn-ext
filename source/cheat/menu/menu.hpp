@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include <D3DX11.h>
+#include <d3d11.h>
 #include "../drawing/imgui/imgui.h"
 #include <string>
 #include "../drawing/imgui/imgui_internal.h"
@@ -418,8 +418,6 @@ void RenderProfileImage(ID3D11Device* device, const std::string& user_id) {
 
 
 
-D3DX11_IMAGE_LOAD_INFO info = {};
-ID3DX11ThreadPump* pump = nullptr;
 ID3D11ShaderResourceView* Imagine = nullptr;
 ID3D11ShaderResourceView* basicbacon = nullptr;
 ID3D11ShaderResourceView* esppreview = nullptr;

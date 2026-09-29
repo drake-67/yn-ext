@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -74,8 +74,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>..\build\project</OutDir>
     <IntDir>..\build\intermediate</IntDir>
-    <IncludePath>C:\Users\moonp\Downloads\SDK\Include;C:\Users\moonp\Downloads\SDK\Freetype\Include;C:\Users\moonp\Downloads\cursed.wtf\source\utils\clipper2lib\include;C:\Users\moonp\Downloads\curl-8.16.0\curl-8.16.0\include\curl;C:\Users\moonp\Downloads\lua-5.4.2_Win64_dll17_lib;C:\Users\moonp\Downloads\rapidjson-master\rapidjson-master\include;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Include;utils\clipper2lib\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Users\moonp\Downloads\SDK\Lib\x64;C:\Users\moonp\Downloads\SDK\Freetype\Win64;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>utils\clipper2lib\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -129,7 +129,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>freetype.lib;d3dx11.lib;library_x64.lib;lua54.lib;libcurl.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lua54.lib;libcurl.lib;winhttp.lib;windowscodecs.lib;d3d11.lib;dwmapi.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -267,7 +267,7 @@
     <ClCompile Include="cheat\drawing\imgui\elements\table.cpp" />
     <ClCompile Include="cheat\drawing\imgui\elements\textfield.cpp" />
     <ClCompile Include="cheat\drawing\imgui\elements\window.cpp" />
-    <ClCompile Include="cheat\drawing\imgui\freetype\imgui_freetype.cpp" />
+    <ClCompile Include="cheat\drawing\imgui\freetype\imgui_freetype.cpp"><ExcludedFromBuild Condition="$(Configuration)|$(Platform)=='Release|x64'">true</ExcludedFromBuild></ClCompile>
     <ClCompile Include="cheat\drawing\imgui\imgui.cpp" />
     <ClCompile Include="cheat\drawing\imgui\imgui_draw.cpp" />
     <ClCompile Include="cheat\drawing\imgui\imgui_tables.cpp" />
