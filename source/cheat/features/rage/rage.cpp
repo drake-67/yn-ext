@@ -105,7 +105,7 @@ void rage::features::spinbot() {
                     prim.set_rotation(rot_y);
                 }
             }
-			// Sleep(1)  this causes 12+ cpu usage for some reason (whiletrue) when disabled turn it on if u want good cpu
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
     }
 }
@@ -281,9 +281,13 @@ void anti_stomp() {
 
         try {
             rbx::instance_t lp = globals::game::players.get_localpl().get_model_instance();
+            if (!lp.address) { std::this_thread::sleep_for(std::chrono::milliseconds(30)); continue; }
             rbx::instance_t bodyeffects = rbx::model_instance_t(lp).find_first_child("BodyEffects");
+            if (!bodyeffects.address) { std::this_thread::sleep_for(std::chrono::milliseconds(30)); continue; }
+            std::uint64_t ko = bodyeffects.find_first_child("K.O");
+            if (!ko) { std::this_thread::sleep_for(std::chrono::milliseconds(30)); continue; }
 
-            bool IsKnocked = static_cast<rbx::value_holder_t<bool>>(bodyeffects.find_first_child("K.O")).get_value();
+            bool IsKnocked = static_cast<rbx::value_holder_t<bool>>(ko).get_value();
             if (IsKnocked) {
                 rbx::humanoid_t(lp.find_first_child_by_class(("Humanoid"))).set_health(0.0f);
             }
@@ -353,7 +357,10 @@ void anti_afk3() {
         }
 
         try {
-            memory->write<float>(Offsets::Workspace::ForceNewAFKDuration, 999.0f);
+            // ForceNewAFKDuration is a Workspace-relative offset, not an absolute address.
+            if (globals::game::workspace.address != 0 && Offsets::Workspace::ForceNewAFKDuration != 0) {
+                memory->write<float>(globals::game::workspace.address + Offsets::Workspace::ForceNewAFKDuration, 999.0f);
+            }
         }
         catch (...) {}
 

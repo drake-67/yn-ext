@@ -158,11 +158,18 @@ std::vector<rbx::instance_t> rbx::treeinterface_t::get_children()
 	rbx::instance_t* self = static_cast<rbx::instance_t*>(this);
 
 	std::vector<instance_t> children;
-
-	std::uint64_t start = memory->read<std::uint64_t>(self->address + Offsets::Instance::ChildrenStart);
-	std::uint64_t end = memory->read<std::uint64_t>(start + Offsets::Instance::ChildrenEnd);
-	for (auto instance = memory->read<std::uint64_t>(start); instance != end; instance += 0x10) {
-		children.emplace_back(instance_t(memory->read<std::uint64_t>(instance)));
+	if (!self->address) {
+		return children;
+	}
+	std::uint64_t begin = memory->read<std::uint64_t>(self->address + Offsets::Instance::ChildrenStart);
+	std::uint64_t end = memory->read<std::uint64_t>(self->address + Offsets::Instance::ChildrenEnd);
+	if (begin == 0 || end == 0 || end < begin || (end - begin) > 0x100000) {
+		return children;
+	}
+	for (auto cur = begin; cur != end && cur != 0; cur += 0x10) {
+		std::uint64_t entry = memory->read<std::uint64_t>(cur);
+		if (entry == 0) continue;
+		children.emplace_back(instance_t(entry));
 	}
 	return children;
 }

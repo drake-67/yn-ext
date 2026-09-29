@@ -685,6 +685,7 @@ void render_t::destroy_imgui() {
 void render_t::start_render() {
 	MSG msg{};
 	static bool last_running_state = false;
+	CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
 
 	const std::chrono::milliseconds frame_time(1000 / 60);
 	auto last_frame_time = std::chrono::high_resolution_clock::now();
@@ -747,11 +748,12 @@ void render_t::start_render() {
 
 		if (last_running_state != this->running) {
 			if (this->running) {
-				SetWindowLong(this->detail->window, GWL_EXSTYLE, WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TOOLWINDOW);
+				SetWindowLongPtrA(this->detail->window, GWL_EXSTYLE, WS_EX_TOPMOST | WS_EX_LAYERED | WS_EX_TOOLWINDOW);
 			}
 			else {
-				SetWindowLong(this->detail->window, GWL_EXSTYLE, WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOOLWINDOW);
+				SetWindowLongPtrA(this->detail->window, GWL_EXSTYLE, WS_EX_TOPMOST | WS_EX_TRANSPARENT | WS_EX_LAYERED | WS_EX_TOOLWINDOW);
 			}
+			SetWindowPos(this->detail->window, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 			last_running_state = this->running;
 		}
 

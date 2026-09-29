@@ -17,6 +17,8 @@
 #include <fstream>
 #include <filesystem>
 #include <cstdio>
+#include <atomic>
+#include <mutex>
 
 #include <windows.h>
 #include <winhttp.h>
@@ -30,7 +32,8 @@ namespace fs = std::filesystem;
 using json = nlohmann::json;
 
 inline std::string ClientVersion = {};
-inline bool Loaded = false;
+inline std::atomic<bool> Loaded{ false };
+inline std::mutex InitMutex;
 
 // ---- offset storage (was constexpr, now runtime-loaded) ----
 namespace BasePart {
@@ -141,6 +144,7 @@ inline std::string HttpGet(const wchar_t* host, const wchar_t* path) {
     HINTERNET hReq = WinHttpOpenRequest(hConnect, L"GET", path, NULL,
         WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
     if (!hReq) { WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); throw std::runtime_error("WinHttpOpenRequest failed"); }
+    WinHttpSetTimeouts(hReq, 5000, 5000, 10000, 10000);
     if (!WinHttpSendRequest(hReq, WINHTTP_NO_ADDITIONAL_HEADERS, 0, WINHTTP_NO_REQUEST_DATA, 0, 0, 0)) {
         WinHttpCloseHandle(hReq); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession);
         throw std::runtime_error("WinHttpSendRequest failed");
@@ -292,6 +296,8 @@ inline void FillFromJson(const json& data) {
 // Call once at startup. Returns true on success (fresh or disk cache).
 // Throws only if no cache exists AND network fails.
 inline bool Init() {
+    std::lock_guard<std::mutex> lock(InitMutex);
+    if (Loaded.load()) return true;
     fs::path versionFile = "offsets.version";
     fs::path offsetsFile = "offsets.json";
     try {
@@ -307,7 +313,14 @@ inline bool Init() {
         if (needDownload && !liveVersion.empty()) {
             logger::print<logger::level::info>("fetching fresh offsets for %s", liveVersion.c_str());
             std::string body = HttpGet(L"offsets.imtheo.lol", L"/offsets.json");
-            { std::ofstream f(offsetsFile, std::ios::trunc | std::ios::binary); f << body; }
+            json parsed = json::parse(body); // validate before touching disk
+            if (!parsed.contains("Offsets")) throw std::runtime_error("downloaded offsets.json missing 'Offsets'");
+            { std::ofstream f(fs::path("offsets.json.tmp"), std::ios::trunc | std::ios::binary); f << body; }
+            std::error_code ec;
+            fs::rename(fs::path("offsets.json.tmp"), offsetsFile, ec);
+            if (ec) { // fallback for filesystems where rename fails
+                std::ofstream f(offsetsFile, std::ios::trunc | std::ios::binary); f << body;
+            }
             { std::ofstream f(versionFile, std::ios::trunc); f << liveVersion; }
         } else if (needDownload && liveVersion.empty()) {
             // no network + no usable cache handled below
@@ -316,15 +329,23 @@ inline bool Init() {
         if (!f) throw std::runtime_error("offsets.json missing and download failed");
         json data = json::parse(f);
         FillFromJson(data);
-        Loaded = true;
+        // Critical offsets — without these every read is base+0 (crash/corruption). Refuse to run.
+        if (FakeDataModel::Pointer == 0 || VisualEngine::Pointer == 0 ||
+            Instance::ChildrenStart == 0 || Instance::Name == 0 ||
+            Player::ModelInstance == 0 || Camera::CameraSubject == 0) {
+            logger::print<logger::level::error>("critical offsets missing (imtheo renamed keys?) — refusing to run");
+            Loaded.store(false);
+            return false;
+        }
+        Loaded.store(true);
         logger::print<logger::level::info>("offsets ready (%s)", ClientVersion.c_str());
         return true;
     } catch (const std::exception& e) {
         logger::print<logger::level::error>("Offsets::Init failed: %s", e.what());
-        Loaded = false;
+        Loaded.store(false);
         return false;
     }
 }
 
-inline bool IsReady() { return Loaded; }
+inline bool IsReady() { return Loaded.load(); }
 } // namespace Offsets

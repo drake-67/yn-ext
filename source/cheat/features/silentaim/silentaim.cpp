@@ -352,7 +352,7 @@ namespace silent {
         }
 
 
-        if (!globals::aim::aimbot_bind.enabled || !globals::silent::enabled); {
+        if (!globals::aim::aimbot_bind.enabled || !globals::silent::enabled) {
             current_target_name = "";
             return;
         }

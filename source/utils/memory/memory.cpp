@@ -57,12 +57,15 @@ std::uint64_t memory_t::find_module_address(const std::string& module_name) {
 }
 
 bool memory_t::attach_to_process(const std::string& process_name) {
-	HANDLE process = OpenProcess(PROCESS_ALL_ACCESS, false, find_process_id(process_name));
+	HANDLE process = OpenProcess(PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION | PROCESS_QUERY_INFORMATION, false, find_process_id(process_name));
 
-	if (process == INVALID_HANDLE_VALUE) {
+	if (process == NULL || process == INVALID_HANDLE_VALUE) {
 		return false;
 	}
 
+	if (process_handle != NULL && process_handle != INVALID_HANDLE_VALUE) {
+		CloseHandle(process_handle);
+	}
 	process_handle = process;
 
 	return true;

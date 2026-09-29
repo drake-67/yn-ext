@@ -251,7 +251,7 @@ void TextCentered(std::string text, ImColor startColor, ImColor endColor, float 
 
 struct ImageCacheEntry {
     std::vector<unsigned char> image_data;
-    ID3D11ShaderResourceView* texture;
+    ID3D11ShaderResourceView* texture = nullptr;
 };
 
 std::unordered_map<std::string, ImageCacheEntry> image_cache;
@@ -270,10 +270,13 @@ std::vector<unsigned char> HttpGetBinary(const std::string& url) {
 
     if (curl) {
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-
-        // SSL verification bypass fix
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
+        curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5L);
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+        curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, "yn-ext/1.0");
 
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &dataBuffer);
@@ -389,31 +392,33 @@ ID3D11ShaderResourceView* LoadTextureFromMemory(ID3D11Device* device, const std:
 }
 
 void RenderUserImage(ID3D11Device* device, const std::string& user_id) {
-    if (image_cache.find(user_id) == image_cache.end()) {
+    if (!device) return;
+    auto it = image_cache.find(user_id);
+    if (it == image_cache.end()) {
         std::vector<unsigned char> image_data = get_user_image(user_id);
-        if (!image_data.empty()) {
-            ImageCacheEntry entry;
-            entry.image_data = image_data;
-            entry.texture = LoadTextureFromMemory(device, image_data);
-            image_cache[user_id] = entry;
-        }
+        if (image_data.empty()) return; // don't cache failures
+        ID3D11ShaderResourceView* tex = LoadTextureFromMemory(device, image_data);
+        if (!tex) return; // decode failed — retry next frame
+        ImageCacheEntry entry;
+        entry.image_data = std::move(image_data);
+        entry.texture = tex;
+        image_cache[user_id] = std::move(entry);
     }
-
-    ImTextureID texture_id = (ImTextureID)image_cache[user_id].texture;
 }
 
 void RenderProfileImage(ID3D11Device* device, const std::string& user_id) {
-    if (image_profile_cache.find(user_id) == image_profile_cache.end()) {
+    if (!device) return;
+    auto it = image_profile_cache.find(user_id);
+    if (it == image_profile_cache.end()) {
         std::vector<unsigned char> image_data = get_profile_user_image(user_id);
-        if (!image_data.empty()) {
-            ImageCacheEntry entry;
-            entry.image_data = image_data;
-            entry.texture = LoadTextureFromMemory(device, image_data);
-            image_profile_cache[user_id] = entry;
-        }
+        if (image_data.empty()) return;
+        ID3D11ShaderResourceView* tex = LoadTextureFromMemory(device, image_data);
+        if (!tex) return;
+        ImageCacheEntry entry;
+        entry.image_data = std::move(image_data);
+        entry.texture = tex;
+        image_profile_cache[user_id] = std::move(entry);
     }
-
-    ImTextureID texture_id = (ImTextureID)image_profile_cache[user_id].texture;
 }
 
 
