@@ -81,15 +81,15 @@ std::string rbx::nameable_t::get_class_name() const
 	return memory->read_string(classNameSize);
 }
 
-std::uint64_t rbx::treeinterface_t::set_frame_position_x(uint64_t position) {
+float rbx::treeinterface_t::set_frame_position_x(float position) {
 	rbx::instance_t* self = static_cast<rbx::instance_t*>(this);
-	memory->write<uint64_t>(self->address + Offsets::silent::FramePositionX, position);
+	memory->write<float>(self->address + Offsets::silent::FramePositionX, position);
 	return position;
 }
 
-std::uint64_t rbx::treeinterface_t::set_frame_position_y(uint64_t position) {
+float rbx::treeinterface_t::set_frame_position_y(float position) {
 	rbx::instance_t* self = static_cast<rbx::instance_t*>(this);
-	memory->write<uint64_t>(self->address + Offsets::silent::FramePositionY, position);
+	memory->write<float>(self->address + Offsets::silent::FramePositionY, position);
 	return position;
 }
 
@@ -132,14 +132,6 @@ std::uint64_t rbx::treeinterface_t::get_current_input_object(std::uint64_t base_
 std::uint64_t cached_input_object = 0;
 void rbx::treeinterface_t::initialize_mouse_service(std::uint64_t address) {
 	cached_input_object = get_current_input_object(address);
-
-	if (cached_input_object && cached_input_object != 0xFFFFFFFFFFFFFFFF) {
-		const char* base_pointer = reinterpret_cast<
-			const char*> (cached_input_object);
-
-		_mm_prefetch(base_pointer + 0xE4, _MM_HINT_T0);
-		_mm_prefetch(base_pointer + 0xE4 + sizeof(math::vector2_t), _MM_HINT_T0);
-	}
 }
 
 void rbx::treeinterface_t::write_mouse_position(std::uint64_t address, float x, float y) {

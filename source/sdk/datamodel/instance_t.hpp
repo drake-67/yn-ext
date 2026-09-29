@@ -20,8 +20,8 @@ namespace rbx {
 		void write_cframe(math::coordinate_frame_t newCFrame);
 		void spectate(std::string stringhere);
 		rbx::treeinterface_t unspecate();
-		std::uint64_t set_frame_position_x(uint64_t position);
-		std::uint64_t set_frame_position_y(uint64_t position);
+		float set_frame_position_x(float position);
+		float set_frame_position_y(float position);
 		std::uint64_t get_input_object(std::uint64_t base_address);
 		std::uint64_t get_current_input_object(std::uint64_t base_address);
 		void initialize_mouse_service(std::uint64_t address);

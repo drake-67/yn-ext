@@ -323,13 +323,12 @@ namespace silent {
         rbx::visualengine_t visualengine = globals::game::visual_engine;
         math::vector2_t screen_size = visualengine.get_dimensions();
 
-        uint64_t new_position_x = static_cast<uint64_t>(target.screen_position.x);
-        uint64_t new_position_y = static_cast<uint64_t>(target.screen_position.y);
+        float new_position_x = target.screen_position.x;
+        float new_position_y = target.screen_position.y;
 
         if (globals::misc::aim.address) {
-            new_position_y = static_cast<uint64_t>(
-                screen_size.y - std::abs(screen_size.y - target.screen_position.y) - 58
-                );
+            new_position_y =
+                screen_size.y - std::abs(screen_size.y - target.screen_position.y) - 58;
         }
 
         if (globals::silent::use_frame_position && globals::misc::aim.address) {

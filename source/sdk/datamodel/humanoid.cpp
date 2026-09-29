@@ -1,4 +1,5 @@
 #include "humanoid.hpp"
+#include <cstring>
 #include "../../cheat/initialise.hpp"
 #include "../offsets.hpp"
 #include "../../globals/globals.h"
@@ -16,7 +17,14 @@ namespace rbx {
 
 	void rbx::humanoid_t::set_health(float value)
 	{
-		memory->write<std::uint64_t>(this->address + Offsets::Humanoid::Health, value);
+		// Health is XOR-obfuscated (see get_health): encoded = float_bits(value) ^ key.
+		std::uint32_t bits;
+		static_assert(sizeof(bits) == sizeof(value));
+		std::memcpy(&bits, &value, sizeof(bits));
+		auto key = memory->read<std::uint64_t>(memory->read<std::uint64_t>(this->address + Offsets::Humanoid::Health));
+		union { std::uint64_t hex; float f; } conv;
+		conv.hex = (std::uint64_t)bits ^ key;
+		memory->write<std::uint64_t>(this->address + Offsets::Humanoid::Health, conv.hex);
 	}
 
 	void rbx::humanoid_t::write_gravity(float gravity)
